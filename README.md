@@ -1,5 +1,6 @@
 # Todolist Demo Application
-#### Gracefully generated with AI
+> This documentation is gracefully generated with AI and attentively reviewed and checked by humans =)
+
 This demo application is structured with a simple three-tier architecture:
 - A **reverse proxy** (Apache HTTPD) handles incoming HTTP(S) traffic, provides SSL termination, and forwards requests to the backend.
 - A **Spring Boot application** (todo-app) processes the core logic and APIs.
