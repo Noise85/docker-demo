@@ -1,9 +1,16 @@
-# Todolist Demo Application - Setup Guide
+# Todolist Demo Application
 #### Gracefully generated with AI
-This guide will help you set up and run the **Todolist Demo Application** with Docker, including environment configuration, HTTPS setup, troubleshooting, container naming conventions, and a sample `docker-compose.yml` configuration.
+This demo application is structured with a simple three-tier architecture:
+- A **reverse proxy** (Apache HTTPD) handles incoming HTTP(S) traffic, provides SSL termination, and forwards requests to the backend.
+- A **Spring Boot application** (todo-app) processes the core logic and APIs.
+- A **PostgreSQL database** provides persistent storage.
+- The **frontend** (not included in this demo) would typically be a separate service, possibly running on a different port or domain, and would communicate with the backend via REST APIs.
+
+> This setup mirrors typical production deployments with separation of concerns, allowing flexible scalability and security hardening for each layer.
 
 ---
-
+# Setup Guide
+This guide will help you set up and run the **Todolist Demo Application** with Docker, including environment configuration, HTTPS setup, troubleshooting, container naming conventions, and a sample `docker-compose.yml` configuration.
 ## 0. Build the Spring Boot Application
 
 The project is organized as follows:
