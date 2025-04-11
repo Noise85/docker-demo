@@ -1,0 +1,5 @@
+/target/
+/.idea/
+/infrastructure/.env
+/infrastructure/apache2/conf/ssl/server.crt
+/infrastructure/apache2/conf/ssl/server.key
