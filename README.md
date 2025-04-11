@@ -102,21 +102,62 @@ Then open [https://iceage.local](https://iceage.local) in your browser.
 
 ## 4. Troubleshooting Connectivity Issues
 
-### Common problems and fixes:
+This section lists known issues grouped by component (HTTPD, application server, and database), with concise explanations and resolutions.
+
+### 🧩 Reverse Proxy (Apache HTTPD)
 
 #### 🔧 Apache fails to start (certificate issues)
 - **Error:** `AH00072: make_sock: could not bind to address`
-- **Fix:** Ensure the certs are properly mounted and paths in `.env` match the `docker-compose` volume mappings.
+- **Fix:** Ensure ports 80/443 are free. Check cert and key file paths and permissions.
 
-#### 🔌 Frontend can't reach the backend
-- **Cause:** Wrong service name in environment or code.
-- **Fix:** Use the exact name of the backend service container defined in `docker-compose.yml`.
+#### 🧩 HTTPD config file errors
+- **Error:** Config parsing errors on boot.
+- **Fix:** Run `httpd -t` inside the container to check syntax. Ensure no missing includes.
 
-#### 🌐 Application doesn’t load in browser
-- **Check:**
-    - HTTPS URL: Make sure you access via `https://iceage.local`
-    - Host entry: Confirm `127.0.0.1 iceage.local` is set in `/etc/hosts`
-    - Browser security: If using a self-signed certificate, your browser may require you to accept the risk manually.
+#### 🔐 Browser shows warning or refuses to load site
+- **Cause:** Using a self-signed certificate.
+- **Fix:** Accept the certificate manually or add to your local trust store (for development).
+
+#### 🔁 Proxy config changes don’t apply
+- **Cause:** Config not reloaded or stale volume.
+- **Fix:** Stop, rebuild, and restart the reverse proxy container. Confirm the file path is correctly mounted.
+
+#### 🚫 Page not found / 404 or 502 errors
+- **Cause:** Reverse proxy can’t reach backend.
+- **Fix:** Check proxy target URLs and that `todo-app` is running and reachable by name.
+
+### ⚙️ Application Server (Spring Boot `todo-app`)
+
+#### 🔌 Frontend/API can’t reach backend
+- **Cause:** Wrong host used (e.g., `localhost`).
+- **Fix:** Use Docker Compose service names like `todo-app` for internal access.
+
+#### ❌ Environment variables not loaded
+- **Cause:** `.env` file syntax error or not passed to `docker-compose`.
+- **Fix:** Validate `.env`, avoid quotes, and always run with `--env-file .env`.
+
+#### 🧪 Code or config changes not applied
+- **Cause:** Container uses cached image or volume.
+- **Fix:** Run `docker-compose build` and `docker-compose down -v && up --build`.
+
+#### 🐛 Spring Boot fails on startup
+- **Cause:** Misconfigured DB credentials or missing properties.
+- **Fix:** Check logs. Match `.env` values with application config.
+
+### 🗄️ Database (PostgreSQL)
+
+#### 🧱 `todo-app` fails to connect to DB
+- **Cause:** Race condition or wrong host/port.
+- **Fix:** Use `depends_on`. Ensure `DB_HOST=postgresql` and port 5432.
+
+#### 📄 Postgres container loses data between runs
+- **Cause:** Missing volume mount.
+- **Fix:** Use `./pgdata:/var/lib/postgresql/data` in `docker-compose.yml`.
+
+#### 🔑 Login/auth errors from `todo-app`
+- **Cause:** Wrong credentials.
+- **Fix:** Ensure the user, password, and DB name match across `.env`, `todo-app`, and `postgresql`.
+
 
 ---
 
