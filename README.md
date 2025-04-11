@@ -83,11 +83,11 @@ From the project root, run:
 ```bash
 docker-compose --env-file .env up --build
 ```
-Then open [https://todolist.local](https://iceage.local) in your browser.
+Then open [https://iceage.local](https://iceage.local) in your browser.
 
 > ✅ Add an entry to your `/etc/hosts` file (for windows users use `\Windows\System32\drivers\etc\hosts`):
 ```plaintext
-127.0.0.1 aceage.local
+127.0.0.1 iceage.local
 ```
 > 🔒 **Note:** If you are working with a self generated certificate you have to manually configure the entries on client and server side
 ---
