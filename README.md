@@ -7,7 +7,7 @@ This guide will help you set up and run the **Todolist Demo Application** with D
 ## 0. Build the Spring Boot Application
 
 The project is organized as follows:
-- `infrastructure/` contains all the **infrastructure-as-a-service (IaaS)** setup, including `docker-compose.yml`, SSL certs, HTTPD configuration, and supporting files.
+- `infrastructure/` contains all the **virtualization and configuration stuff** setup, including `docker-compose.yml`, SSL certs, HTTPD configuration, and supporting files.
 - `src/` contains the **Spring Boot application**, which you need to build and containerize before running the full stack.
 
 Before running the application with Docker, build the Spring Boot backend and ensure configuration properties are correctly defined.
