@@ -1,11 +1,8 @@
-FROM eclipse-temurin:17-jdk-alpine
+FROM tomcat:9.0-jdk17-corretto
 
-# Set working directory
-WORKDIR /app
+# Remove the default ROOT webapp.
+RUN rm -rf /usr/local/tomcat/webapps/ROOT
 
-# Copy the JAR (adjust the name if needed)
-COPY target/*.jar app.jar
-
-# Run the app
-# Use the default profile if none is provided, otherwise use the provided one inside the .env file
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Copy your WAR file from the target directory into Tomcat’s webapps folder,
+# renaming it to ROOT.war so that it is deployed as the root application.
+COPY target/*.war /usr/local/tomcat/webapps/ROOT.war

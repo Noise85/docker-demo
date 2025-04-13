@@ -28,10 +28,9 @@ services:
       - internal
 
   todo-app:
-    image: eneabette/todo-app:latest
+    image: todolist-tomcat9:latest
     container_name: todo-app
     environment:
-      JAVA_TOOL_OPTIONS: -Dspring.jpa.hibernate.ddl-auto=create-drop
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
@@ -53,7 +52,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/sql/ddl.sql:/docker-entrypoint-initdb.d/ddl.sql:ro
+      - ./postgres/sql/import.sql:/docker-entrypoint-initdb.d/import.sql:ro
     networks:
       - internal
     depends_on:
@@ -63,3 +64,6 @@ services:
 networks:
   internal:
     driver: bridge
+
+volumes:
+    pgdata:
