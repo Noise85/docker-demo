@@ -7,6 +7,9 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URISyntaxException;
 import java.util.List;
 
+
+@RequestMapping(value = "/todos",
+        produces = "application/json")
 public interface TodoItemController {
     @GetMapping(value = "/all")
     ResponseEntity<List<TodoItem>> getAllItems();
