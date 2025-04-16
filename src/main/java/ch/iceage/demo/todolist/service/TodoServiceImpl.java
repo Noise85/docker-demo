@@ -2,16 +2,18 @@ package ch.iceage.demo.todolist.service;
 
 import ch.iceage.demo.todolist.domain.Status;
 import ch.iceage.demo.todolist.domain.TodoItem;
+import ch.iceage.demo.todolist.domain.dto.TaskSearchDTO;
 import ch.iceage.demo.todolist.repository.TodoItemRepository;
+import ch.iceage.demo.todolist.repository.TodoItemSpecifications;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.PersistenceException;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 /**
  * @author Enea Bettè
@@ -24,17 +26,77 @@ public class TodoServiceImpl implements TodoService {
 	private TodoItemRepository todoItemRepository;
 
 	@Override
-	public List<TodoItem> getNotDone() {
-		return todoItemRepository.findByStatusIn(
-                EnumSet.allOf(Status.class)
-                        .stream()
-                        .filter(status -> !status.equals(Status.DONE))
-                        .collect(Collectors.toSet()));
+	public TodoItem find(Long id) {
+		return todoItemRepository.findById(id).orElse(new TodoItem());
+	}
+
+	@Override
+	public Iterable<TodoItem> getByStatus(String status, Pageable page) {
+		return todoItemRepository.findAll(
+				Specification.where(TodoItemSpecifications.hasStatus(Status.valueOf(status))), page);
+	}
+
+	@Override
+	public Iterable<TodoItem> getAll() {
+		return todoItemRepository.findAll();
+	}
+
+	@Override
+	public Iterable<TodoItem> getAll(Pageable page) {
+		if(page == null) {
+			return todoItemRepository.findAll();
+		}
+		else {
+			return todoItemRepository.findAll(page);
+		}
+	}
+
+	@Override
+	public List<TodoItem> filterBy(TaskSearchDTO taskSearchDTO) {
+		return todoItemRepository.findAll(
+				Specification.where(TodoItemSpecifications.filterBy(taskSearchDTO)));
+	}
+
+	@Override
+	public Page<TodoItem> filterBy(TaskSearchDTO taskSearchDTO, Pageable page) {
+		return todoItemRepository.findAll(
+				Specification.where(TodoItemSpecifications.filterBy(taskSearchDTO)), page);
+	}
+
+	@Override
+	public Iterable<TodoItem> getBacklog(Pageable page) {
+		if(page == null) {
+			return todoItemRepository.findAll(Specification.where(
+					TodoItemSpecifications.hasStatus(Status.BACKLOG)));
+		}
+		else {
+			return todoItemRepository.findAll(Specification.where(
+					TodoItemSpecifications.hasStatus(Status.BACKLOG)), page);
+		}
+	}
+
+	@Override
+	public List<TodoItem> getBacklog() {
+		return todoItemRepository
+				.findAll(Specification.where(TodoItemSpecifications.hasStatus(Status.BACKLOG)));
 	}
 	
 	@Override
-	public List<TodoItem> getDone() {
-		return todoItemRepository.findByStatus(Status.DONE);
+	public List<TodoItem> getBoard() {
+		return todoItemRepository.findAll(Specification.where(
+				TodoItemSpecifications.hasStatusIn(Status.boardStatuses())));
+	}
+
+	@Override
+	public Iterable<TodoItem> getBoard(Pageable page) {
+		if(page == null) {
+			return todoItemRepository.findAll(Specification.where(
+					TodoItemSpecifications.hasStatusIn(Status.boardStatuses())));
+		}
+		else {
+			return todoItemRepository.findAll(Specification.where(
+					TodoItemSpecifications.hasStatusIn(Status.boardStatuses())), page);
+		}
 	}
 
 	@Override
@@ -50,11 +112,6 @@ public class TodoServiceImpl implements TodoService {
 	}
 
 	@Override
-	public TodoItem find(Long id) {
-		return todoItemRepository.findById(id).orElse(new TodoItem());
-	}
-
-	@Override
 	@Transactional
 	public TodoItem update(TodoItem todoItem) {
 		if(todoItem.getId()!=null) {
@@ -63,11 +120,5 @@ public class TodoServiceImpl implements TodoService {
 			throw new PersistenceException("TodoItem ID cannot be null");
 		}
 	}
-
-	@Override
-	public List<TodoItem> getAll() {
-		return StreamSupport.stream(todoItemRepository.findAll().spliterator(), false)
-				.collect(Collectors.toList());
-    }
 
 }

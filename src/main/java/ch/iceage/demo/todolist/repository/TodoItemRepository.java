@@ -1,7 +1,8 @@
 package ch.iceage.demo.todolist.repository;
 
 import ch.iceage.demo.todolist.domain.TodoItem;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -9,7 +10,6 @@ import org.springframework.stereotype.Repository;
  * @since Aug 03, 2017 11:56:56
  */
 @Repository
-public interface TodoItemRepository extends CrudRepository<TodoItem, Long>, TodoItemCustomRepository {
-
+public interface TodoItemRepository extends PagingAndSortingRepository<TodoItem, Long>, JpaSpecificationExecutor<TodoItem> {
 
 }

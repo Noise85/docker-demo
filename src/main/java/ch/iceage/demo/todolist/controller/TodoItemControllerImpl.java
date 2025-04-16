@@ -1,8 +1,11 @@
 package ch.iceage.demo.todolist.controller;
 
 import ch.iceage.demo.todolist.domain.TodoItem;
+import ch.iceage.demo.todolist.domain.dto.TaskSearchDTO;
 import ch.iceage.demo.todolist.service.TodoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -10,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
 
 /**
  * @author Enea Bettè
@@ -23,13 +25,24 @@ public class TodoItemControllerImpl implements TodoItemController {
 	private TodoService todoService;
 
 	@Override
-	public ResponseEntity<List<TodoItem>> getAllItems() {
-		List<TodoItem> todoItems = todoService.getAll();
-		if(todoItems.isEmpty()) {
+	public ResponseEntity<Iterable<TodoItem>> getAllItems(@PageableDefault Pageable page) {
+		Iterable<TodoItem> todoItems = todoService.getAll(page);
+		if(!todoItems.iterator().hasNext()) {
 			return ResponseEntity.noContent().build();
 		}
 		else {
-			return ResponseEntity.ok(todoService.getAll());
+			return ResponseEntity.ok(todoItems);
+		}
+	}
+
+	@Override
+	public ResponseEntity<Iterable<TodoItem>> getAllBy(@RequestBody TaskSearchDTO taskSearchDTO) {
+		Iterable<TodoItem> todoItems = todoService.filterBy(taskSearchDTO, taskSearchDTO.page().toPageRequest());
+		if(!todoItems.iterator().hasNext()) {
+			return ResponseEntity.noContent().build();
+		}
+		else {
+			return ResponseEntity.ok(todoItems);
 		}
 	}
 
@@ -44,21 +57,34 @@ public class TodoItemControllerImpl implements TodoItemController {
 	}
 
 	@Override
-	public ResponseEntity<List<TodoItem>> getAllDone() {
-		List<TodoItem> todoItems = todoService.getDone();
-		if(todoItems.isEmpty()) {
+	public ResponseEntity<Iterable<TodoItem>> getByStatus(@PathVariable String status, @PageableDefault Pageable page) {
+		Iterable<TodoItem> todoItems = todoService.getByStatus(status, page);
+		if(!todoItems.iterator().hasNext()) {
 			return ResponseEntity.noContent().build();
-		} else {
+		}
+		else {
 			return ResponseEntity.ok(todoItems);
 		}
 	}
 
 	@Override
-	public ResponseEntity<List<TodoItem>> getAllNotDone() {
-		List<TodoItem> todoItems = todoService.getNotDone();
-		if(todoItems.isEmpty()) {
+	public ResponseEntity<Iterable<TodoItem>> getBoardItems(@PageableDefault Pageable page) {
+		Iterable<TodoItem> todoItems = todoService.getBoard(page);
+		if(!todoItems.iterator().hasNext()) {
 			return ResponseEntity.noContent().build();
-		} else {
+		}
+		else {
+			return ResponseEntity.ok(todoItems);
+		}
+	}
+
+	@Override
+	public ResponseEntity<Iterable<TodoItem>> getBacklogItems(@PageableDefault Pageable page) {
+		Iterable<TodoItem> todoItems = todoService.getBacklog(page);
+		if(!todoItems.iterator().hasNext()) {
+			return ResponseEntity.noContent().build();
+		}
+		else {
 			return ResponseEntity.ok(todoItems);
 		}
 	}
