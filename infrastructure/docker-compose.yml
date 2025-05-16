@@ -1,16 +1,4 @@
 services:
-  env-check:
-    image: eneabette/env-test:latest
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
-    networks:
-      - internal
-
   reverse-proxy:
     image: httpd:latest
     ports:
@@ -22,13 +10,27 @@ services:
       - ./apache2/conf/extra/httpd-mod-ssl.conf:/usr/local/apache2/conf/extra/httpd-mod-ssl.conf:ro
       - ./apache2/conf/ssl:/usr/local/apache2/conf/ssl:ro
     depends_on:
-      - env-check
       - todo-app
     networks:
+      - public
       - internal
 
+  todo-app-frontend:
+    image: eneabette/taskmanager-demo-frontend:latest
+    container_name: todo-app-frontend
+    depends_on:
+      - todo-app
+    environment:
+      API_BASE_URL: ${API_BASE_URL}
+    networks:
+      - internal
+    # No published ports – accessible only via Docker networking
+
   todo-app:
-    image: eneabette/todo-app:latest
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    image: eneabette/taskmanager-demo-backend:latest
     container_name: todo-app
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -37,8 +39,8 @@ services:
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
     depends_on:
-      - env-check
       - postgresql
     networks:
       - internal
@@ -57,12 +59,12 @@ services:
       - ./postgres/sql/import.sql:/docker-entrypoint-initdb.d/import.sql:ro
     networks:
       - internal
-    depends_on:
-      - env-check
     # No published ports – accessible only within the network
 
 networks:
   internal:
+    driver: bridge
+  public:
     driver: bridge
 
 volumes:

@@ -5,7 +5,7 @@ This demo application is structured with a simple three-tier architecture:
 - A **reverse proxy** (Apache HTTPD) handles incoming HTTP(S) traffic, provides SSL termination, and forwards requests to the backend.
 - A **Spring Boot application** (todo-app) processes the core logic and APIs.
 - A **PostgreSQL database** provides persistent storage.
-- The **frontend** (not included in this demo) would typically be a separate service, possibly running on a different port or domain, and would communicate with the backend via REST APIs.
+- The **frontend** , which also runs behind the reverse proxy, and communicate with the backend via REST APIs.
 
 > This setup mirrors typical production deployments with separation of concerns, allowing flexible scalability and security hardening for each layer.
 
@@ -52,6 +52,11 @@ POSTGRES_DB=todolist_db
 DB_HOST=postgresql
 DB_PORT=5432
 SPRING_PROFILES_ACTIVE=prod|dev
+CERTBOT_EMAIL=enea.bette@gmail.com
+CERTBOT_DOMAIN=iceage.local
+CORS_ALLOWED_ORIGINS=iceage.local:443
+#USED TO SET THE API URL AT RUNTIME INSIDE THE FRONTEND CONTAINER
+API_BASE_URL=https://iceage.local/api
 ```
 
 > 🔒 **Note:** Make sure to keep the `.env` file secure and do not commit it to version control.
@@ -185,18 +190,6 @@ Below is the `docker-compose.yml` configuration used for the Todolist demo:
 
 ```yaml
 services:
-  env-check:
-    image: eneabette/env-test:latest
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
-    networks:
-      - internal
-
   reverse-proxy:
     image: httpd:latest
     ports:
