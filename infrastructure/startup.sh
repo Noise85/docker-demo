@@ -13,6 +13,10 @@ CERTBOT_EMAIL_DEFAULT="your-email@example.com"
 CERTBOT_DOMAIN_DEFAULT="localhost"
 CORS_ALLOWED_ORIGINS_DEFAULT="localhost:443"
 API_BASE_URL_DEFAULT="http://localhost:8080/api"
+CERT_DIR=./apache2/conf/ssl/
+CRT_DOMAIN_DEFAULT="localhost"
+CRT_FILE="$CERT_DIR/server.crt"
+KEY_FILE="$CERT_DIR/server.key"
 
 print_help() {
   echo "[STARTUP] Usage: ./start.sh [OPTIONS]"
@@ -27,18 +31,28 @@ print_help() {
   echo "[STARTUP]   --CERTBOT_EMAIL=..."
   echo "[STARTUP]   --CERTBOT_DOMAIN=..."
   echo "[STARTUP]   --CORS_ALLOWED_ORIGINS=..."
+  echo "[STARTUP]   --CRT_DOMAIN_DEFAULT=..."
   echo "[STARTUP]   --API_BASE_URL=..."
   echo "[STARTUP]   --help    Show this help and exit"
 }
 
 generate_certs() {
-  echo "[STARTUP] Generating SSL certificates..."
-  mkdir -p ./apache2/conf/ssl/
-  openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-    -keyout ./apache2/conf/ssl/server.key \
-    -out ./apache2/conf/ssl/server.crt \
-    -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=$CORS_ALLOWED_ORIGINS"
-  echo "[STARTUP] Certificates generated for domain $CORS_ALLOWED_ORIGINS"
+  if [ -f "$CRT_FILE" ] && [ -f "$KEY_FILE" ]; then
+    echo "[STARTUP] Certificates already in place for domain $1. Skipping generation."
+  else
+    echo "[STARTUP] Generating SSL certificates..."
+    if [ -z "$1" ]; then
+      echo "[STARTUP] Error: DOMAIN is not defined. Cannot generate certificates."
+      return 1
+    else
+      mkdir -p "$CERT_DIR"
+      openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+       -subj "/CN=$CRT_DOMAIN_DEFAULT" \
+       -keyout "$KEY_FILE" \
+       -out "$CRT_FILE"
+      echo "[STARTUP] Certificates generated for domain $1"
+    fi
+  fi
 }
 
 # Parse CLI args
@@ -53,6 +67,7 @@ for arg in "$@"; do
     --CERTBOT_EMAIL=*) CERTBOT_EMAIL="${arg#*=}" ;;
     --CERTBOT_DOMAIN=*) CERTBOT_DOMAIN="${arg#*=}" ;;
     --CORS_ALLOWED_ORIGINS=*) CORS_ALLOWED_ORIGINS="${arg#*=}" ;;
+    --CRT_DOMAIN=*) CRT_DOMAIN="${arg#*=}" ;;
     --API_BASE_URL=*) API_BASE_URL="${arg#*=}" ;;
     --help) print_help; exit 0 ;;
     *) echo "[STARTUP] Unknown option: $arg"; print_help; exit 1 ;;
@@ -73,6 +88,7 @@ if [ -f "$ENV_FILE" ]; then
     CERTBOT_EMAIL
     CERTBOT_DOMAIN
     CORS_ALLOWED_ORIGINS
+    CRT_DOMAIN
     API_BASE_URL
   )
 
@@ -120,6 +136,7 @@ if [ ! -f "$ENV_FILE" ]; then
   prompt_var CERTBOT_EMAIL "$CERTBOT_EMAIL_DEFAULT"
   prompt_var CERTBOT_DOMAIN "$CERTBOT_DOMAIN_DEFAULT"
   prompt_var CORS_ALLOWED_ORIGINS "$CORS_ALLOWED_ORIGINS_DEFAULT"
+  prompt_var CRT_DOMAIN "$CRT_DOMAIN_DEFAULT"
   prompt_var API_BASE_URL "$API_BASE_URL_DEFAULT"
 
   # Validate inputs
@@ -149,15 +166,18 @@ SPRING_PROFILES_ACTIVE=$SPRING_PROFILES_ACTIVE
 CERTBOT_EMAIL=$CERTBOT_EMAIL
 CERTBOT_DOMAIN=$CERTBOT_DOMAIN
 CORS_ALLOWED_ORIGINS=$CORS_ALLOWED_ORIGINS
+CRT_DOMAIN=$CRT_DOMAIN
 API_BASE_URL=$API_BASE_URL
 COMPOSE_BAKE=true
 EOF
 
   chmod 600 "$ENV_FILE"
   echo "[STARTUP] .env created at $ENV_FILE with restricted permissions (600)."
-fi
 
-generate_certs;
+  # Generate SSL certificates
+  generate_certs "$CRT_DOMAIN";
+
+fi
 
 # Run Docker Compose
 echo "[STARTUP] Starting Docker Compose..."
