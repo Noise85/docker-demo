@@ -31,6 +31,16 @@ print_help() {
   echo "[STARTUP]   --help    Show this help and exit"
 }
 
+generate_certs() {
+  echo "[STARTUP] Generating SSL certificates..."
+  mkdir -p ./apache2/conf/ssl/
+  openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout ./apache2/conf/ssl/server.key \
+    -out ./apache2/conf/ssl/server.crt \
+    -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=$CORS_ALLOWED_ORIGINS"
+  echo "[STARTUP] Certificates generated for domain $CORS_ALLOWED_ORIGINS"
+}
+
 # Parse CLI args
 for arg in "$@"; do
   case $arg in
@@ -146,6 +156,8 @@ EOF
   chmod 600 "$ENV_FILE"
   echo "[STARTUP] .env created at $ENV_FILE with restricted permissions (600)."
 fi
+
+generate_certs;
 
 # Run Docker Compose
 echo "[STARTUP] Starting Docker Compose..."
